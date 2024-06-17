@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Define the root folder path
-root_folder_path = '//home.org.aalto.fi/saarnij4/data/Documents/Pupil'
+root_folder_path = ''
 
 # Read the text file containing the mapping of recording IDs to participant numbers
-mapping_file_path = "//home.org.aalto.fi/saarnij4/data/Documents/recording_id_to_participant_number.txt"
+mapping_file_path = "/recording_id_to_participant_number.txt"
 mapping_df = pd.read_csv(mapping_file_path, sep=', ', engine='python')
 
 # Create a dictionary from the mapping DataFrame with "Recording ID" as keys and "Participant" as values
@@ -533,7 +533,7 @@ final_df['Percentage of objects remembered'] = final_df[' number of objects reme
 
 final_df = final_df.drop(columns=['Initiation', 'Gaze Follower']) 
 
-file_path_saving = r'\\home.org.aalto.fi\saarnij4\data\Documents\AnalysisData\Test\Visit_Metrics_All_Group6.csv'
+file_path_saving = r'.csv'
 final_df.to_csv(file_path_saving, index=False)
 
 
