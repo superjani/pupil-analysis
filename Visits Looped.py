@@ -83,7 +83,7 @@ def process_fixations_file(file_path):
     # Identify visits per participant
     fixations_data['visit_id'] = fixations_data.groupby('participant_id')['fixation detected on surface'].transform(lambda x: (x != x.shift()).cumsum())
 
-    # Filter out fixations with duration less than 50ms or more than 2000ms (ylärajan perustelu?) and fixations not detected on surface
+    # Filter out fixations with duration less than 50ms or more than 2000ms and fixations not detected on surface
     filtered_fixations = fixations_data[
         (fixations_data['duration [ms]'] >= 50) &
         (fixations_data['duration [ms]'] <= 2000) &
@@ -338,24 +338,6 @@ final_df['visit_id'] = final_df.groupby('Participant ID').cumcount() + 1
 final_df['start_timestamp'] = pd.to_datetime(final_df['start_timestamp'])
 final_df['end_timestamp'] = pd.to_datetime(final_df['end_timestamp'])
 
-# # Calculate the number of times each participant was in joint attention
-# participant_joint_attention_counts = final_df.groupby('Participant ID')['Joint Attention'].sum().reset_index()
-# participant_joint_attention_counts = participant_joint_attention_counts.rename(columns={'Joint Attention': 'Joint Attention Count_Sum'})
-
-# # Calculate the number of times each participant initiated joint attention
-# participant_initiation_counts = final_df.groupby('Participant ID')['Initiation'].sum().reset_index()
-# participant_initiation_counts = participant_initiation_counts.rename(columns={'Initiation': 'Initiation_Sum'})
-
-# # Calculate the number of times each participant was a follower
-# participant_follower_counts = final_df.groupby('Participant ID')['Gaze Follower'].sum().reset_index()
-# participant_follower_counts = participant_follower_counts.rename(columns={'Gaze Follower': 'Gaze Follower_Sum'})
-
-# final_df = pd.merge(final_df, participant_initiation_counts, on='Participant ID', how='left')
-# final_df = pd.merge(final_df, participant_follower_counts, on='Participant ID', how='left')
-
-# # Merge the participant_joint_attention_counts with final_df
-# final_df = pd.merge(final_df, participant_joint_attention_counts, on='Participant ID', how='left')
-
 initiation_counts = final_df.loc[(final_df['Initiation'] & final_df['Joint Attention']), ['Participant ID', 'Event ID']].groupby('Participant ID').count()
 joint_attention_counts = final_df.loc[(final_df['Joint Attention'] & final_df['Joint Attention']), ['Participant ID', 'Event ID']].groupby('Participant ID').count()
 
@@ -444,92 +426,6 @@ final_df.loc[final_df['Joint Attention'] == 0, ['Initiator of event', 'Gaze Foll
 final_df['Joint Attention'] = final_df['Joint Attention'].astype(int)
 
 final_df['unique_visit_id'] = final_df['AOI'].astype(str) + "_" + final_df['visit_id'].astype(str)
-
-
-# # Calculate the number of times each participant was in joint attention
-# participant_joint_attention_counts = final_df.groupby('Participant ID')['Joint Attention'].sum().reset_index()
-# participant_joint_attention_counts = participant_joint_attention_counts.rename(columns={'Joint Attention': 'Joint Attention Count_Sum_sorted'})
-
-# # Calculate the number of times each participant initiated joint attention
-# participant_initiation_counts = final_df.groupby('Participant ID')['Initiation'].sum().reset_index()
-# participant_initiation_counts = participant_initiation_counts.rename(columns={'Initiation': 'Initiation_Sum_sorted'})
-
-# # Calculate the number of times each participant was a follower
-# participant_follower_counts = final_df.groupby('Participant ID')['Gaze Follower'].sum().reset_index()
-# participant_follower_counts = participant_follower_counts.rename(columns={'Gaze Follower': 'Gaze Follower_Sum_sorted'})
-
-# # Merge counts back into final_df
-# final_df_sorted = pd.merge(final_df, participant_initiation_counts, on='Participant ID', how='left')
-# final_df_sorted = pd.merge(final_df_sorted, participant_follower_counts, on='Participant ID', how='left')
-# final_df_sorted = pd.merge(final_df_sorted, participant_joint_attention_counts, on='Participant ID', how='left')
-
-
-""" Merge memory files to the visit_df """
-
-### NOTE! Run this first 
-face_visits = pd.read_csv(r"\\home.org.aalto.fi\saarnij4\data\Documents\AnalysisData\Test\Visit_Metrics_On_Face.csv")
-
-face_visits['start_timestamp'] = pd.to_datetime(face_visits['start_timestamp'])
-face_visits['end_timestamp'] = pd.to_datetime(face_visits['end_timestamp'])
-
-# Perform the merge
-final_df = pd.merge(final_df, face_visits, on=['Participant ID', 'visit_id', 'visit_duration', 'num_fixations', 'mean_fixation_duration', 'start_timestamp', 'end_timestamp', 'AOI', 'Section', 'Group'], how = 'outer')
-
-#final_df = pd.concat([face_visits, final_df])
-
-### Number of objects remembered
-objects_df = pd.read_csv("//home.org.aalto.fi/saarnij4/data/Documents/muistetut.csv")
-objects_after_df = pd.read_csv("//home.org.aalto.fi/saarnij4/data/Documents/muistetut_after.csv")
-
-objects_df['Free/cued'] = 'Free'
-objects_after_df['Free/cued'] = 'Cued'
-
-objects_df = pd.concat([objects_after_df, objects_df])
-
-### Semantic Similarity results 
-memory_df = pd.read_csv('C:/Users/saarnij4/.spyder-py3/semantic_similarity_before.csv')
-memory_df['Free/cued'] = 'Free'
-memory_after_df = pd.read_csv("C:/Users/saarnij4/.spyder-py3/semantic_similarity_after.csv")
-memory_after_df['Free/cued'] = 'Cued'
-
-memory_df = pd.concat([memory_after_df, memory_df])
-memory_df = memory_df.drop(columns=['Unnamed: 0']) 
-
-final_df = pd.merge(final_df, memory_df, on = ["Participant ID"], how = 'outer')
-final_df = pd.merge(final_df, objects_df, on = ["Participant ID", "Free/cued"], how = 'outer')
-
-### Rearrange the data 
-# Sort the DataFrame by 'participant_id', 'section', and 'start_timestamp'
-final_df = final_df.sort_values(by=['Participant ID', 'Section', 'start_timestamp'])
-
-# Reset the index after sorting
-final_df = final_df.reset_index(drop=True)
-
-# Group by participant ID and section
-grouped = final_df.groupby(['Participant ID', 'Section'])
-
-# Reassign visit IDs based on sorted start timestamps within each group
-final_df['visit_id'] = grouped['start_timestamp'].rank(method='dense').astype(int)
-
-# Sort the DataFrame in reverse order by 'Group' and 'Section' columns
-final_df = final_df.sort_values(by=['Group', 'Section'], ascending=[True, False])
-
-# Separate the data into two DataFrames: one for GroupWork and one for IndividualWork
-groupwork_df = final_df[final_df['Group'].str.contains('GroupWork')]
-individualwork_df = final_df[final_df['Group'].str.contains('IndividualWork')]
-
-### Filter the df based on fixation x and y coordinates 
-# Fill NaN values in 'mean_fixation_x' and 'mean_fixation_y' with -1 for rows where AOI is 'Face'
-# final_df.loc[final_df['AOI'] == 'Face', ['mean_fixation_x', 'mean_fixation_y']] = 0.5
-
-# # # Filtered DataFrame where mean_fixation_x and mean_fixation_y are within the specified range
-# final_df = final_df[(final_df['mean_fixation_x'].between(0, 1)) & 
-#                         (final_df['mean_fixation_y'].between(0, 1))]
-
-# Reset the index after reassigning visit IDs
-final_df = final_df.reset_index(drop=True)
-
-final_df['Percentage of objects remembered'] = final_df[' number of objects remembered'] / final_df[' number of objects in the final build'] *100
 
 final_df = final_df.drop(columns=['Initiation', 'Gaze Follower']) 
 
