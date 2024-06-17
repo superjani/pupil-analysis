@@ -1,25 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 26 10:10:08 2024
-
-@author: saarnij4
-
-Ensimmäinen numero "participant id" kolumnissa indikoi "gaze initiator", muut numerot ns. "gaze followers"
-
-Laskentatapa "joint attention duration (ms)" = "gaze initiator" aloitusaika (start time) + 1 sekunti aikaa muiden liittyä mukaan. 
-Lopetusaika = "gaze follower" lopetusaika. 
-
-Tämä eroaa ns. korjatusta koodista (Flipped_Shared_Fixations), jossa aikaa tulee lisää, kun "gaze initiator" saattaa määrittää loppuajan. 
-
-Fiksaatio-duplikaatit poistettu poistamalla "participant x end time" duplikaatit. Eka tulos säilyy. 
-
-"""
 
 import pandas as pd
 import numpy as np
 
 # Load fixations data from fixations.csv
-fixations_data = pd.read_csv('//home.org.aalto.fi/saarnij4/data/Documents/PupilData/Group1/TableGroupWork2/fixations.csv')
+fixations_data = pd.read_csv('.csv')
 
 # Filter the fixations data to include only rows where "fixation detected on surface" is True
 fixations_data = fixations_data[fixations_data['fixation detected on surface']]
@@ -28,7 +12,7 @@ fixations_data = fixations_data[fixations_data['fixation detected on surface']]
 fixations_data = fixations_data[(fixations_data['duration [ms]'] >= 50) & (fixations_data['duration [ms]'] <= 2000)]
 
 # Read the text file containing the mapping of recording IDs to participant numbers
-mapping_file_path = "//home.org.aalto.fi/saarnij4/data/Documents/recording_id_to_participant_number.txt"
+mapping_file_path = "recording_id_to_participant_number.txt"
 mapping_df = pd.read_csv(mapping_file_path, sep=', ', engine='python')
 
 # Create a dictionary from the mapping DataFrame with "Recording ID" as keys and "Participant" as values
@@ -232,8 +216,8 @@ proximity_threshold = 0.2
 result_df, overlap_df = calculate_shared_fixations(fixations_data, proximity_threshold)
 
 # Save the overlap_df DataFrame as a CSV file
-overlap_df.to_csv('overlap_data_G1GW2.csv', index=False)
+overlap_df.to_csv('.csv', index=False)
 
 print(result_df)
 
-result_df.to_csv('Group Level Joint Attention Metrics_Group1_2.csv', index=False)
+result_df.to_csv('.csv', index=False)
